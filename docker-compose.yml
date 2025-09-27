@@ -1,0 +1,38 @@
+services:
+  todo_server:
+    build: ./Todo_Server
+    ports:
+      - "5005:5005"
+    environment:
+      - MONGO_URI=mongodb://db:27017/todoapp
+      - JWT_SECRET=supersecret
+      - PORT=5005
+    # depends_on:
+    # - db
+    networks:
+      - appnet
+
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "3000:80"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - appnet
+
+  # db:
+  #   image: mongo:5
+  #   restart: always
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - db_data:/data/db
+  #   networks:
+  #     - appnet
+
+volumes:
+  db_data:
+
+networks:
+  appnet:
