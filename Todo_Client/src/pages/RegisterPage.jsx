@@ -1,17 +1,31 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { toast } from "react-toastify";
+import assets from "../assets/assets";
+import { useMutation } from "@tanstack/react-query";
+import { authAPI } from "../services/api";
+import Spinner from "../components/Spinner";
+
+import { IoIosHome } from "react-icons/io";
 
 const RegisterPage = () => {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
-  const navigate = useNavigate();
 
+  const { navigate } = useAuth();
+
+  const register = useMutation({
+    mutationFn: authAPI.register,
+    onSuccess: (res) => {
+      toast.success("Đăng kí thành công mời bạn đăng nhập!");
+      navigate("/dashboard");
+    },
+    onError: (err) => {
+      toast.error(err.response.data.message);
+    },
+  });
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -24,34 +38,32 @@ const RegisterPage = () => {
       toast.error("Mật khẩu phải có ít nhất 6 ký tự!");
       return;
     }
-
-    setLoading(true);
-
-    try {
-      await register(name, email, password);
-      toast.success("Đăng ký thành công!");
-      navigate("/dashboard");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Đăng ký thất bại!");
-    } finally {
-      setLoading(false);
-    }
+    register.mutate({ email, password });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-blue-600">
+    <div
+      className="relative min-h-screen flex items-center justify-center p-6"
+      style={{
+        backgroundImage: `url('${assets.bg_3}')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {register.isPending && <Spinner />}
+
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-2xl">
+        <div className="absolute ">
+          <Link to="/">
+            <IoIosHome className="w-5 h-5 hover:text-amber-300" />
+          </Link>
+        </div>
         <div className="text-center">
           <Link
             to="/"
-            className="flex items-center justify-center space-x-2 mb-6"
+            className="flex items-center justify-center space-x-2 mb-6 h-20 overflow-hidden"
           >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/9802/9802618.png"
-              alt="Logo"
-              className="w-10 h-10"
-            />
-            <span className="text-2xl font-bold text-gray-800">Todos.</span>
+            <img src={assets.logo} alt="Logo" className="w-50" />
           </Link>
           <h2 className="text-3xl font-extrabold text-gray-900">Đăng Ký</h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -61,22 +73,6 @@ const RegisterPage = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="sr-only">
-                Họ và tên
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                className="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
-                placeholder="Họ và tên"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
             <div>
               <label htmlFor="email" className="sr-only">
                 Email
@@ -130,17 +126,9 @@ const RegisterPage = () => {
           <div>
             <button
               type="submit"
-              disabled={loading}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Đang đăng ký...
-                </div>
-              ) : (
-                "Đăng Ký"
-              )}
+              Đăng Ký
             </button>
           </div>
 

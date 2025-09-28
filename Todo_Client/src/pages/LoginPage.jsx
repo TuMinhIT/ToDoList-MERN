@@ -1,45 +1,66 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { toast } from "react-toastify";
+import assets from "../assets/assets";
+import { useMutation } from "@tanstack/react-query";
+import Spinner from "../components/Spinner";
+import { authAPI } from "../services/api";
+import { IoIosHome } from "react-icons/io";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [token]);
+  const loginMutate = useMutation({
+    mutationFn: authAPI.login,
+    onSuccess: (res) => {
+      login(res.username, res.token);
+      navigate("/dashboard");
+    },
+    onError: (err) => {
+      console.log(err.response.data.message);
+      toast.error("Sai email hoặc mật khẩu!");
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      await login(email, password);
-      toast.success("Đăng nhập thành công!");
-      navigate("/dashboard");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Đăng nhập thất bại!");
-    } finally {
-      setLoading(false);
-    }
+    loginMutate.mutate({ email, password });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{
+        backgroundImage: `url('${assets.bg_2}')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {loginMutate.isPending && <Spinner />}
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-2xl">
+        <div className="absolute ">
+          <Link to="/">
+            <IoIosHome className="w-5 h-5 hover:text-amber-300" />
+          </Link>
+        </div>
         <div className="text-center">
           <Link
             to="/"
-            className="flex items-center justify-center space-x-2 mb-6"
+            className="flex items-center justify-center space-x-2 mb-6 h-20 overflow-hidden"
           >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/9802/9802618.png"
-              alt="Logo"
-              className="w-10 h-10"
-            />
-            <span className="text-2xl font-bold text-gray-800">Todos.</span>
+            <img src={assets.logo} alt="Logo" className=" w-45 h-auto" />
           </Link>
+
           <h2 className="text-3xl font-extrabold text-gray-900">Đăng Nhập</h2>
           <p className="mt-2 text-sm text-gray-600">
             Chào mừng bạn quay trở lại
@@ -85,17 +106,9 @@ const LoginPage = () => {
           <div>
             <button
               type="submit"
-              disabled={loading}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Đang đăng nhập...
-                </div>
-              ) : (
-                "Đăng Nhập"
-              )}
+              Đăng Nhập
             </button>
           </div>
 

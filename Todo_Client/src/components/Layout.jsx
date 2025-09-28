@@ -1,7 +1,8 @@
-import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { toast } from "react-toastify";
+import assets from "../assets/assets";
+import Sidebar from "./Sidebar";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -12,33 +13,30 @@ const Layout = ({ children }) => {
     return location.pathname === path;
   };
 
-  const handleLogout = () => {
-    logout();
-    toast.success("Đăng xuất thành công!");
-    navigate("/");
+  const handleLogout = async () => {
+    await logout();
+    navigate("/", { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="bg-white shadow-sm border-b py-3 border-gray-200">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 ">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2">
-                <img
-                  src="https://cdn-icons-png.flaticon.com/512/9802/9802618.png"
-                  alt="Logo"
-                  className="w-8 h-8"
-                />
-                <span className="text-xl font-bold text-gray-800">Todos.</span>
+            <div className="flex items-center">
+              <Link
+                to="#"
+                className="flex items-center justify-center space-x-2 h-20 overflow-hidden"
+              >
+                <img src={assets.logo} alt="Logo" className=" w-45 h-auto" />
               </Link>
             </div>
             <div className="flex items-center space-x-4">
               {user && (
                 <>
                   <span className="text-gray-600 text-sm">
-                    Xin chào, <strong>{user.name}</strong>
+                    Xin chào, <strong>{user.username}</strong>
                   </span>
                   <button
                     onClick={handleLogout}
@@ -55,84 +53,7 @@ const Layout = ({ children }) => {
 
       <div className="flex">
         {/* Sidebar */}
-        <div className="w-64 bg-white shadow-sm min-h-screen">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-6 uppercase tracking-wide">
-              Bộ Sưu Tập
-            </h2>
-            <nav className="space-y-2">
-              <Link
-                to="/dashboard"
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  isActive("/dashboard")
-                    ? "bg-blue-100 text-blue-700 border-r-2 border-blue-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Công Việc Đang Chờ
-              </Link>
-              <Link
-                to="/completed"
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  isActive("/completed")
-                    ? "bg-green-100 text-green-700 border-r-2 border-green-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Công Việc Hoàn Thành
-              </Link>
-              <Link
-                to="/all"
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  isActive("/all")
-                    ? "bg-purple-100 text-purple-700 border-r-2 border-purple-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                  />
-                </svg>
-                Tất Cả Công Việc
-              </Link>
-            </nav>
-          </div>
-        </div>
+        <Sidebar isActive={isActive} />
 
         {/* Main Content */}
         <div className="flex-1 p-6">{children}</div>

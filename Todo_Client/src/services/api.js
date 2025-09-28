@@ -1,12 +1,11 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: import.meta.env.VITE_BACKEND,
   headers: {
     "Content-Type": "application/json",
   },
 });
-
 // Interceptor để tự động thêm token vào header
 API.interceptors.request.use(
   (config) => {
@@ -35,9 +34,24 @@ API.interceptors.response.use(
 
 // Auth APIs
 export const authAPI = {
-  login: async (username, password) => {
+  login: async ({ email, password }) => {
     try {
-      const response = await API.post("/login", { username, password });
+      const response = await API.post("/api/auth/login", {
+        username: email,
+        password,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  register: async ({ email, password }) => {
+    try {
+      const response = await API.post("/api/auth/register", {
+        username: email,
+        password,
+      });
       return response.data;
     } catch (error) {
       throw error;

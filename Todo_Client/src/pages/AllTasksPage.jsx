@@ -3,7 +3,6 @@ import Layout from "../components/Layout";
 import TaskItem from "../components/TaskItem";
 import AddTaskModal from "../components/AddTaskModal";
 import { taskAPI } from "../services/api";
-import "./AllTasksPage.css";
 
 const AllTasksPage = () => {
   const [tasks, setTasks] = useState([]);

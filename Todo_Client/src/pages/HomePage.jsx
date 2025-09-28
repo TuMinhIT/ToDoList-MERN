@@ -1,21 +1,29 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import assets from "../assets/assets";
+import { Link, useNavigate } from "react-router-dom";
+import FooterContact from "../components/FooterContact";
+import { useEffect } from "react";
+import { useAuth } from "../context/authContext";
 
 const HomePage = () => {
+  const { token } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Navigation */}
       <nav className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <Link to="/" className="flex items-center space-x-2">
-                <img
-                  src="https://cdn-icons-png.flaticon.com/512/9802/9802618.png"
-                  alt="Logo"
-                  className="w-8 h-8"
-                />
-                <span className="text-xl font-bold text-gray-800">Todos.</span>
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center ">
+              <Link
+                to="/dashboard"
+                className="flex items-center justify-center h-20 overflow-hidden"
+              >
+                <img src={assets.logo} alt="Logo" className=" w-30 " />
               </Link>
             </div>
             <div className="flex space-x-4">
@@ -37,17 +45,25 @@ const HomePage = () => {
       </nav>
 
       {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center">
+
+      <div
+        className=" flex items-center justify-center p-10"
+        style={{
+          backgroundImage: `url('${assets.bg_3}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6">
             Todos, <span className="text-blue-600">just tasks</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-black mb-8 max-w-2xl mx-auto">
             Theo dõi các công việc hàng ngày trong cuộc sống và cảm nhận sự hài
             lòng khi hoàn thành chúng.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/dashboard">
+            <Link to="/login">
               <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
                 Bắt Đầu Ngay
               </button>
@@ -60,7 +76,7 @@ const HomePage = () => {
       </div>
 
       {/* Features Section */}
-      <div className="bg-white py-16">
+      <div className="bg-white pt-16  pb-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
@@ -149,6 +165,7 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+      <FooterContact />
     </div>
   );
 };

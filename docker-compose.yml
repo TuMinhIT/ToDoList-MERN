@@ -1,16 +1,21 @@
 services:
   todo_server:
     build: ./Todo_Server
+    container_name: todo_server
     ports:
       - "5005:5005"
     environment:
       - MONGO_URI=mongodb://db:27017/todoapp
       - JWT_SECRET=supersecret
       - PORT=5005
-    # depends_on:
-    # - db
+    volumes:
+      - ./Todo_Server:/app
+      - /app/node_modules # giữ node_modules trong container
+    depends_on:
+      - db
     networks:
       - appnet
+    command: nodemon src/server.js
 
   # frontend:
   #   build: ./frontend
@@ -21,15 +26,17 @@ services:
   #   networks:
   #     - appnet
 
-  # db:
-  #   image: mongo:5
-  #   restart: always
-  #   ports:
-  #     - "27017:27017"
-  #   volumes:
-  #     - db_data:/data/db
-  #   networks:
-  #     - appnet
+  db:
+    image: mongo:5
+    container_name: todo_db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - db_data:/data/db
+    networks:
+      - appnet
+    command: ["mongod", "--quiet"]
 
 volumes:
   db_data:
