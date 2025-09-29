@@ -1,55 +1,49 @@
 services:
   todo_server:
     build: ./Todo_Server
-    container_name: todo_server
+    container_name: todo_server_prod
     ports:
       - "5005:5005"
     environment:
       - MONGO_URI=mongodb://db:27017/todoapp
       - JWT_SECRET=supersecret
       - PORT=5005
-    volumes:
-      - ./Todo_Server:/app
-      - /app/node_modules # giữ node_modules trong container
+      - NODE_ENV=production
     depends_on:
       - db
     networks:
       - appnet
-    command: nodemon src/server.js
+    restart: unless-stopped
 
   todo_client:
     build:
       context: ./Todo_Client
-      dockerfile: DockerFile
-    container_name: todo_client
-    # ports:
-    #   - "5173:5173"
+      dockerfile: Dockerfile.prod
+    container_name: todo_client_prod
     ports:
-      - "5173:80"
-    volumes:
-      - ./Todo_Client:/app
-      - /app/node_modules
+      - "80:80"
     depends_on:
       - todo_server
     networks:
       - appnet
-    environment:
-      - VITE_API_URL=http://localhost:5005/api
+    restart: unless-stopped
 
   db:
     image: mongo:5
-    container_name: todo_db
+    container_name: todo_db_prod
     restart: always
     ports:
       - "27017:27017"
     volumes:
-      - db_data:/data/db
+      - db_data_prod:/data/db
     networks:
       - appnet
-    command: ["mongod", "--quiet"]
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
 
 volumes:
-  db_data:
+  db_data_prod:
 
 networks:
   appnet:

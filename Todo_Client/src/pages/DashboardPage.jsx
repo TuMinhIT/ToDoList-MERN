@@ -3,7 +3,6 @@ import Layout from "./Layout";
 import AddTaskModal from "../components/AddTaskModal";
 import { taskAPI } from "../services/api";
 import { IoMdAdd } from "react-icons/io";
-import { toast } from "react-toastify";
 import StatisticsCards from "../components/StatisticsCards";
 import TasksList from "../components/TasksList";
 import { useQuery } from "@tanstack/react-query";
