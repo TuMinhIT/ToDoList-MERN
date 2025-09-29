@@ -2,21 +2,21 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import { toast } from "react-toastify";
 import assets from "../assets/assets";
-import Sidebar from "./Sidebar";
+import Sidebar from "../components/Sidebar";
+import { IoMdMenu } from "react-icons/io";
+import { useState } from "react";
+import DashboardPage from "../pages/DashboardPage";
 
-const Layout = ({ children }) => {
-  const location = useLocation();
+const Layout = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const [isActive, setIsActive] = useState("pending");
 
   const handleLogout = async () => {
     await logout();
     navigate("/", { replace: true });
   };
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -53,10 +53,33 @@ const Layout = ({ children }) => {
 
       <div className="flex">
         {/* Sidebar */}
-        <Sidebar isActive={isActive} />
+        <div
+          className={`
+          fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform
+          transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:relative md:translate-x-0
+        `}
+        >
+          <Sidebar
+            setIsOpen={setIsOpen}
+            isActive={isActive}
+            setIsActive={setIsActive}
+          />
+        </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">{children}</div>
+        <div className="flex-1 p-6">
+          {/* Nút toggle chỉ hiện trên mobile */}
+          <button
+            className="md:hidden mb-4 p-2 rounded bg-gray-200"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <IoMdMenu />
+          </button>
+
+          <DashboardPage isActive={isActive} />
+        </div>
       </div>
     </div>
   );

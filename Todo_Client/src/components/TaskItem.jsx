@@ -1,144 +1,266 @@
-import React, { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { taskAPI } from "../services/api";
+import { toast } from "react-toastify";
+import { MdOutlineCheck } from "react-icons/md";
+import ConfirmDelete from "../components/ConfirmDelete";
 
-const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
+import { MdSettingsBackupRestore } from "react-icons/md";
+const TaskItem = ({ task }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
-  const [editDescription, setEditDescription] = useState(
-    task.description || ""
-  );
+  const [editDescription, setEditDescription] = useState(task.desc || "");
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const queryClient = useQueryClient();
+  const [countdown, setCountdown] = useState(null);
+
+  const completeTask = useMutation({
+    mutationFn: taskAPI.update,
+    onSuccess: (res) => {
+      if (res.completed) {
+        setIsCompleting(true);
+        toast.success("Đã hoàn thành công việc!");
+        setCountdown(3);
+        const countdownInterval = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(countdownInterval);
+              queryClient.invalidateQueries({ queryKey: ["tasks"] });
+              return null;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        setCountdown(null);
+        toast.success("Đã khôi phục công việc!");
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        setIsCompleting(false);
+      }
+    },
+    onError: (err) => {
+      setIsCompleting(false);
+      toast.error(err.response.data.message);
+      console.log(err.response);
+    },
+  });
+
+  const onToggleComplete = async (taskId) => {
+    if (!task.completed) {
+      setIsCompleting(true);
+    }
+    completeTask.mutate({
+      id: taskId,
+      title: task.title,
+      desc: task.desc,
+      completed: !task.completed,
+    });
+  };
+
+  const deleteTask = useMutation({
+    mutationFn: taskAPI.delete,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries("tasks");
+    },
+    onError: (err) => {
+      toast.error(err.response.data.message);
+      console.log(err.response);
+    },
+  });
+
+  const updateTask = useMutation({
+    mutationFn: taskAPI.update,
+    onSuccess: (res) => {
+      toast.success("Deleted!");
+      queryClient.invalidateQueries("tasks");
+    },
+    onError: (err) => {
+      toast.error(err.response.data.message);
+      console.log(err.response);
+    },
+  });
 
   const handleSave = () => {
-    onEdit(task._id, {
+    updateTask.mutate({
+      id: task._id,
       title: editTitle,
-      description: editDescription,
+      desc: editDescription,
+      completed: task.completed,
     });
     setIsEditing(false);
   };
 
   const handleCancel = () => {
     setEditTitle(task.title);
-    setEditDescription(task.description || "");
+    setEditDescription(task.desc || "");
     setIsEditing(false);
   };
 
   const getCategoryColor = (category) => {
     const colors = {
       work: "bg-blue-100 text-blue-800",
-      personal: "bg-green-100 text-green-800", 
+      personal: "bg-green-100 text-green-800",
       shopping: "bg-yellow-100 text-yellow-800",
       others: "bg-gray-100 text-gray-800",
     };
     return colors[category] || "bg-gray-100 text-gray-800";
   };
 
+  const [openModel, setOpenModel] = useState(false);
   return (
-    <div className={`bg-white rounded-lg shadow-md p-4 mb-4 border-l-4 transition-all duration-200 hover:shadow-lg ${
-      task.completed ? "border-l-green-500 bg-gray-50" : "border-l-blue-500"
-    }`}>
-      <div className="flex items-start space-x-3">
-        {/* Checkbox */}
-        <div className="flex-shrink-0 mt-1">
-          <input
-            type="checkbox"
-            checked={task.completed}
-            onChange={() => onToggleComplete(task._id)}
-            className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-          />
-        </div>
-
-        <div className="flex-1">
-          {isEditing ? (
-            <div className="space-y-3">
+    <>
+      {openModel && (
+        <ConfirmDelete
+          open={openModel}
+          setOpen={setOpenModel}
+          onConfirm={() => deleteTask.mutate({ id: task._id })}
+        />
+      )}
+      <div
+        className={` rounded-lg shadow-md p-4 mb-4 border-l-4 transition-all duration-500 hover:shadow-lg transform  ${
+          task.completed
+            ? "border-l-green-500 bg-green-200"
+            : "border-l-blue-500 bg-gray-200"
+        }`}
+      >
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0 mt-1 relative">
+            {isCompleting && (
+              <MdOutlineCheck className="w-10 h-10 text-green-700" />
+            )}
+            {!isCompleting && !task.completed && (
               <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Tiêu đề công việc"
+                type="checkbox"
+                onChange={() => onToggleComplete(task._id)}
+                className={`w-5 h-5 border-2 rounded transition-all duration-300 focus:ring-2 focus:ring-offset-2 `}
               />
-              <textarea
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                rows="2"
-                placeholder="Mô tả công việc"
+            )}
+            {task.completed && (
+              <MdSettingsBackupRestore
+                onClick={() => onToggleComplete(task._id)}
+                className={`w-5 h-5 hover:text-blue-400 rounded transition-all duration-300 focus:ring-2 focus:ring-offset-2 `}
               />
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleSave}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Lưu
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Hủy
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className={`text-lg font-medium ${
-                  task.completed ? "line-through text-gray-500" : "text-gray-900"
-                }`}>
-                  {task.title}
-                </h3>
-                
-                <div className="flex items-center space-x-2">
-                  {task.category && (
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(task.category)}`}>
-                      {task.category}
-                    </span>
-                  )}
-                  
+            )}
+          </div>
+
+          <div className="flex-1">
+            {isEditing ? (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Tiêu đề công việc"
+                />
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  rows="2"
+                  placeholder="Mô tả công việc"
+                />
+                <div className="flex space-x-2">
                   <button
-                    onClick={() => setIsEditing(true)}
-                    className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                    title="Chỉnh sửa"
+                    onClick={handleSave}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
+                    Lưu
                   </button>
-                  
                   <button
-                    onClick={() => onDelete(task._id)}
-                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                    title="Xóa"
+                    onClick={handleCancel}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400 transition-colors"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    Hủy
                   </button>
                 </div>
               </div>
-              
-              {task.description && (
-                <p className={`text-sm mb-2 ${
-                  task.completed ? "text-gray-400" : "text-gray-600"
-                }`}>
-                  {task.description}
-                </p>
-              )}
-              
-              <div className="flex justify-between items-center text-xs text-gray-500">
-                <span>
-                  Tạo: {new Date(task.createdAt).toLocaleDateString('vi-VN')}
-                </span>
-                {task.updatedAt !== task.createdAt && (
-                  <span>
-                    Cập nhật: {new Date(task.updatedAt).toLocaleDateString('vi-VN')}
-                  </span>
+            ) : (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3>{task.title}</h3>
+
+                  <div className="flex items-center space-x-2">
+                    {task.category && (
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(
+                          task.category
+                        )}`}
+                      >
+                        {task.category}
+                      </span>
+                    )}
+
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                      title="Chỉnh sửa"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+
+                    <button
+                      onClick={() => setOpenModel(true)}
+                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Xóa"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {task.desc && (
+                  <p
+                    className={`text-sm mb-2 ${
+                      task.completed ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {task.desc}
+                  </p>
                 )}
+
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>
+                    Tạo: {new Date(task.createdAt).toLocaleDateString("vi-VN")}
+                  </span>
+                  {task.updatedAt !== task.createdAt && (
+                    <span>
+                      Cập nhật:{" "}
+                      {new Date(task.updatedAt).toLocaleDateString("vi-VN")}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

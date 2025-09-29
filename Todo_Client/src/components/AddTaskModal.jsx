@@ -1,23 +1,42 @@
-import React, { useState } from "react";
-
-const AddTaskModal = ({ isOpen, onClose, onAddTask }) => {
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { taskAPI } from "../services/api";
+import { toast } from "react-toastify";
+const AddTaskModal = ({ onClose }) => {
+  const { create } = taskAPI;
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     category: "personal",
+  });
+  const queryClient = useQueryClient();
+  const addTask = useMutation({
+    mutationFn: create,
+    onSuccess: (res) => {
+      toast.success("Add success!");
+
+      setFormData({
+        title: "",
+        description: "",
+        category: "personal",
+      });
+      queryClient.invalidateQueries("tasks");
+      onClose();
+    },
+    onError: (err) => {
+      toast.error(err.response.data.message);
+    },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
-    onAddTask(formData);
-    setFormData({
-      title: "",
-      description: "",
-      category: "personal",
+    addTask.mutate({
+      title: formData.title,
+      desc: formData.description,
+      category: formData.category,
     });
-    onClose();
   };
 
   const handleChange = (e) => {
@@ -27,20 +46,36 @@ const AddTaskModal = ({ isOpen, onClose, onAddTask }) => {
     });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Thêm Công Việc Mới</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Thêm Công Việc Mới
+          </h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -48,7 +83,10 @@ const AddTaskModal = ({ isOpen, onClose, onAddTask }) => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Tiêu đề công việc *
             </label>
             <input
@@ -64,7 +102,10 @@ const AddTaskModal = ({ isOpen, onClose, onAddTask }) => {
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Mô tả công việc
             </label>
             <textarea
@@ -79,7 +120,10 @@ const AddTaskModal = ({ isOpen, onClose, onAddTask }) => {
           </div>
 
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Danh mục
             </label>
             <select

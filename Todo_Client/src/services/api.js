@@ -59,11 +59,10 @@ export const authAPI = {
   },
 };
 
-export const productAPI = {
-  // Lấy tất cả sản phẩm
+export const taskAPI = {
   getAll: async () => {
     try {
-      const response = await API.get("/products");
+      const response = await API.get("/api/tasks");
       return response.data;
     } catch (error) {
       throw error;
@@ -73,56 +72,46 @@ export const productAPI = {
   // Lấy sản phẩm theo ID
   getById: async (id) => {
     try {
-      const response = await API.get(`/products/${id}`);
+      const response = await API.get(`/api/tasks/${id}`);
       return response.data;
     } catch (error) {
       throw error;
     }
   },
 
-  // Thêm sản phẩm mới
-  create: async (productData) => {
-    const formData = new FormData();
-    formData.append("code", productData.code);
-    formData.append("name", productData.name);
-    formData.append("price", productData.price);
-    formData.append("desc", productData.desc);
-    if (productData.image) {
-      formData.append("image", productData.image);
+  create: async ({ title, desc, category }) => {
+    try {
+      const response = await API.post("/api/tasks", {
+        title,
+        desc,
+        category,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
     }
-
-    const response = await API.post("/products", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
   },
 
-  // Cập nhật sản phẩm
-  update: async (id, productData) => {
-    const formData = new FormData();
-    formData.append("code", productData.code);
-    formData.append("name", productData.name);
-    formData.append("price", productData.price);
-    formData.append("desc", productData.desc);
-
-    if (productData.image && typeof productData.image === "object") {
-      formData.append("image", productData.image);
+  update: async ({ id, title, desc, completed }) => {
+    try {
+      const response = await API.put(`/api/tasks/${id}`, {
+        title,
+        desc,
+        completed,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
     }
-
-    const response = await API.put(`/products/${id}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
   },
 
-  // Xóa sản phẩm
-  delete: async (id) => {
-    const response = await API.delete(`/products/${id}`);
-    return response.data;
+  delete: async ({ id }) => {
+    try {
+      const response = await API.delete(`/api/tasks/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 };
 

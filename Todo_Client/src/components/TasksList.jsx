@@ -1,10 +1,9 @@
-import React from "react";
-
-const TasksList = () => {
+import TaskItem from "./TaskItem";
+const TasksList = ({ Tasks }) => {
   return (
     <>
       <div className="bg-white rounded-lg shadow-sm p-6">
-        {pendingTasks.length === 0 ? (
+        {Tasks.length === 0 ? (
           <div className="text-center py-12">
             <svg
               className="w-16 h-16 text-gray-300 mx-auto mb-4"
@@ -20,20 +19,14 @@ const TasksList = () => {
               />
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Không có công việc đang chờ! 🎉
+              Không có công việc nào! 🎉
             </h3>
             <p className="text-gray-500">Thêm công việc mới để bắt đầu.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {pendingTasks.map((task) => (
-              <TaskItem
-                key={task._id}
-                task={task}
-                onToggleComplete={handleToggleComplete}
-                onEdit={handleEditTask}
-                onDelete={handleDeleteTask}
-              />
+            {Tasks.map((task) => (
+              <TaskItem key={task._id} task={task} />
             ))}
           </div>
         )}

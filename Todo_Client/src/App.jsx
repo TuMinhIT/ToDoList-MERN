@@ -7,11 +7,11 @@ import Private from "./router/Private";
 import Public from "./router/Public";
 // Import pages
 import HomePage from "./pages/HomePage";
-import DashboardPage from "./pages/DashboardPage";
-// import AllTasksPage from "./pages/AllTasksPage";
+
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import Layout from "./pages/Layout";
 
 function App() {
   return (
@@ -46,26 +46,10 @@ function App() {
             path="/dashboard"
             element={
               <Private>
-                <DashboardPage />
+                <Layout />
               </Private>
             }
           />
-          {/* <Route 
-              path="/all" 
-              element={
-                <PrivateRoute>
-                  <AllTasksPage />
-                </PrivateRoute>
-              } 
-            /> */}
-          {/* <Route
-              path="/completed"
-              element={
-                <PrivateRoute>
-                  <AllTasksPage />
-                </PrivateRoute>
-              }
-            /> */}
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ToastContainer
